@@ -18,6 +18,27 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def resolve_db_path(
+    explicit_path: Optional[str] = None,
+    default_path: Optional[str] = None,
+) -> str:
+    """Resolve the SQLite database path from explicit argument, env var, or default.
+
+    Checks ``explicit_path`` first, then the ``CHATBOT_DB_PATH`` environment
+    variable, and finally falls back to ``default_path`` (or ``data/chatbot.db``
+    under the project root).
+    """
+    chosen = (
+        (explicit_path or "").strip()
+        or os.environ.get("CHATBOT_DB_PATH", "").strip()
+        or (default_path or "").strip()
+    )
+    if not chosen:
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        chosen = os.path.join(project_root, "data", "chatbot.db")
+    return os.path.abspath(os.path.expanduser(chosen))
+
+
 class ChatbotDatabase:
     """Thread-safe SQLite repository for all persistent chatbot data."""
 

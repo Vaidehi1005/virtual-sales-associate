@@ -16,7 +16,7 @@ PROJECT_ROOT = os.path.dirname(BACKEND_DIR)
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
-from database import ChatbotDatabase
+from database import ChatbotDatabase, resolve_db_path
 from engine import SalesAssociateEngine
 
 
@@ -30,7 +30,10 @@ class AppContext:
         frontend_dir: Optional[str] = None,
     ) -> None:
         self.products_path = products_path or os.path.join(PROJECT_ROOT, "data", "products.json")
-        self.db_path = db_path or os.path.join(PROJECT_ROOT, "data", "chatbot.db")
+        self.db_path = resolve_db_path(
+            explicit_path=db_path,
+            default_path=os.path.join(PROJECT_ROOT, "data", "chatbot.db"),
+        )
         self.frontend_dir = frontend_dir or os.path.join(PROJECT_ROOT, "frontend")
         self.db = ChatbotDatabase(self.db_path)
         self.engine = SalesAssociateEngine(self.products_path, self.db)

@@ -16,7 +16,10 @@ from collections import Counter
 from difflib import SequenceMatcher
 from typing import Any, Dict, List, Optional, Tuple
 
-from database import ChatbotDatabase
+try:
+    from database import ChatbotDatabase
+except ImportError:
+    from .database import ChatbotDatabase
 
 try:
     import requests  # type: ignore
