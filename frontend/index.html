@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopSense AI — Virtual Sales Associate</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-logo">S</div>
+          <div>
+            <div class="brand-name">ShopSense AI</div>
+            <div class="brand-sub">Virtual Sales Associate</div>
+          </div>
+        </div>
+        <button class="btn-primary new-chat-btn" id="newChatBtn">+ New Chat</button>
+      </div>
+
+      <div class="sidebar-section-label">Previous Conversations</div>
+      <div class="session-list" id="sessionList"></div>
+
+      <div class="memory-panel" id="memoryPanel">
+        <div class="memory-panel-head">
+          <span>Stored Memory</span>
+          <button class="link-btn" id="openMemoryBtn">Manage</button>
+        </div>
+        <div class="memory-tags" id="memoryTags">
+          <span class="memory-empty">No preferences saved yet.</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn mobile-only" id="toggleSidebarBtn" title="Menu">☰</button>
+          <div>
+            <h1 class="chat-title" id="chatTitle">New Shopping Chat</h1>
+            <span class="ai-badge" id="aiModeBadge">Local Hybrid AI</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn-outline hidden" id="compareSelectedBtn">
+            Compare (<span id="compareCount">0</span>)
+          </button>
+          <button class="btn-outline" id="openCatalogBtn">Catalog</button>
+          <button class="btn-outline" id="openSavedBtn">
+            Saved &amp; Cart <span class="badge-pill" id="savedBadge">0</span>
+          </button>
+          <button class="icon-btn" id="openSettingsBtn" title="Settings &amp; Memory">⚙</button>
+        </div>
+      </header>
+
+      <section class="chat-feed" id="chatFeed">
+        <!-- Rendered dynamically -->
+      </section>
+
+      <footer class="composer-wrap">
+        <form class="composer" id="chatForm">
+          <textarea
+            id="chatInput"
+            rows="1"
+            placeholder="Ask anything — e.g. 'Best camera phone under ₹40,000', 'Compare iPhone 16 Pro and S25 Ultra', 'Is 8GB RAM enough?', 'WFH desk setup'..."
+            autocomplete="off"
+          ></textarea>
+          <button type="submit" class="btn-primary send-btn" id="sendBtn">Send</button>
+        </form>
+        <div class="composer-hint">
+          Conversations, preferences, wishlist &amp; cart are stored automatically in SQLite. Press Enter to send.
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Saved & Cart Drawer -->
+  <div class="drawer-backdrop hidden" id="savedDrawerBackdrop">
+    <aside class="drawer" id="savedDrawer">
+      <div class="drawer-head">
+        <h2>Saved Items &amp; Cart</h2>
+        <button class="icon-btn" id="closeSavedBtn">✕</button>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-tab="cart">Cart (<span id="cartCountTab">0</span>)</button>
+        <button class="tab" data-tab="wishlist">Wishlist (<span id="wishlistCountTab">0</span>)</button>
+      </div>
+      <div class="drawer-body" id="savedDrawerBody"></div>
+      <div class="drawer-foot" id="savedDrawerFoot"></div>
+    </aside>
+  </div>
+
+  <!-- Catalog Modal -->
+  <div class="modal-backdrop hidden" id="catalogModalBackdrop">
+    <div class="modal modal-lg">
+      <div class="modal-head">
+        <h2>Store Product Catalog</h2>
+        <button class="icon-btn" id="closeCatalogBtn">✕</button>
+      </div>
+      <div class="catalog-filters">
+        <input type="text" id="catalogSearch" placeholder="Search products, specs, brands, use cases..." />
+        <select id="catalogCategory">
+          <option value="all">All Categories</option>
+        </select>
+      </div>
+      <div class="catalog-grid" id="catalogGrid"></div>
+    </div>
+  </div>
+
+  <!-- Memory & Settings Modal -->
+  <div class="modal-backdrop hidden" id="settingsModalBackdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Persistent Memory &amp; AI Settings</h2>
+        <button class="icon-btn" id="closeSettingsBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <section class="settings-section">
+          <h3>Stored Shopping Preferences</h3>
+          <p class="muted">Remembered across all chats in SQLite so you never have to repeat yourself.</p>
+          <div id="memoryListModal" class="memory-list-modal"></div>
+          <form id="addPrefForm" class="inline-form">
+            <input type="text" id="prefKeyInput" placeholder="Preference (e.g. skin_type, budget)" required />
+            <input type="text" id="prefValInput" placeholder="Value (e.g. Oily, 35000)" required />
+            <button type="submit" class="btn-primary">Save</button>
+          </form>
+          <button class="btn-danger-outline" id="clearAllMemoryBtn">Clear All Preferences</button>
+        </section>
+
+        <section class="settings-section">
+          <h3>Recent Query History</h3>
+          <div id="recentQueriesModal" class="recent-queries-list"></div>
+        </section>
+
+        <section class="settings-section">
+          <h3>Optional Gemini API Key (RAG Enhancement)</h3>
+          <p class="muted">
+            Works 100% offline with the built-in Hybrid NLU Engine. Optionally add a Gemini API key for generative LLM phrasing grounded on catalog products.
+          </p>
+          <div class="inline-form">
+            <input type="password" id="geminiKeyInput" placeholder="Enter Gemini API key (optional)" />
+            <button type="button" class="btn-primary" id="saveGeminiKeyBtn">Save Key</button>
+            <button type="button" class="btn-outline" id="clearGeminiKeyBtn">Remove</button>
+          </div>
+          <div id="geminiStatusText" class="muted small"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
